@@ -44,6 +44,7 @@ version = "0.4.13"
 dependencies = [
  "document-features",
  "hashbrown",
+ "indexmap",
  "portable-atomic",
  "portable-atomic-util",
  "rstest",

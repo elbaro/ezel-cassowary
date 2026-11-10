@@ -2,14 +2,13 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::f64;
 
-use hashbrown::hash_map::Entry;
-use hashbrown::{HashMap, HashSet};
+use indexmap::map::Entry;
 
 use crate::constraint::Constraint;
 use crate::row::{near_zero, Row, Symbol, SymbolKind};
 use crate::strength::Strength;
 use crate::{
-    AddConstraintError, AddEditVariableError, Expression, RelationalOperator,
+    AddConstraintError, AddEditVariableError, Expression, IndexMap, IndexSet, RelationalOperator,
     RemoveConstraintError, RemoveEditVariableError, SuggestValueError, Term, Variable,
 };
 
@@ -48,14 +47,14 @@ struct EditInfo {
 /// A constraint solver using the Cassowary algorithm. For proper usage please see the top level
 /// crate documentation.
 pub struct Solver {
-    constraints: HashMap<Constraint, Tag>,
-    var_data: HashMap<Variable, (f64, Symbol, usize)>,
-    var_for_symbol: HashMap<Symbol, Variable>,
+    constraints: IndexMap<Constraint, Tag>,
+    var_data: IndexMap<Variable, (f64, Symbol, usize)>,
+    var_for_symbol: IndexMap<Symbol, Variable>,
     public_changes: Vec<(Variable, f64)>,
-    changed: HashSet<Variable>,
+    changed: IndexSet<Variable>,
     should_clear_changes: bool,
-    rows: HashMap<Symbol, Box<Row>>,
-    edits: HashMap<Variable, EditInfo>,
+    rows: IndexMap<Symbol, Box<Row>>,
+    edits: IndexMap<Variable, EditInfo>,
     infeasible_rows: Vec<Symbol>, // never contains external symbols
     objective: Row,
     artificial: Option<Row>,
@@ -72,14 +71,14 @@ impl Solver {
     /// Construct a new solver.
     pub fn new() -> Solver {
         Solver {
-            constraints: HashMap::new(),
-            var_data: HashMap::new(),
-            var_for_symbol: HashMap::new(),
+            constraints: IndexMap::default(),
+            var_data: IndexMap::default(),
+            var_for_symbol: IndexMap::default(),
             public_changes: Vec::new(),
-            changed: HashSet::new(),
+            changed: IndexSet::default(),
             should_clear_changes: false,
-            rows: HashMap::new(),
-            edits: HashMap::new(),
+            rows: IndexMap::default(),
+            edits: IndexMap::default(),
             infeasible_rows: Vec::new(),
             objective: Row::new(0.0),
             artificial: None,
@@ -156,7 +155,7 @@ impl Solver {
     ) -> Result<(), RemoveConstraintError> {
         let tag = self
             .constraints
-            .remove(constraint)
+            .swap_remove(constraint)
             .ok_or(RemoveConstraintError::UnknownConstraint)?;
 
         // Remove the error effects from the objective function
@@ -166,7 +165,7 @@ impl Solver {
 
         // If the marker is basic, simply drop the row. Otherwise,
         // pivot the marker into the basis and then drop the row.
-        if self.rows.remove(&tag.marker).is_none() {
+        if self.rows.swap_remove(&tag.marker).is_none() {
             let (leaving, mut row) = self.get_marker_leaving_row(tag.marker).ok_or(
                 RemoveConstraintError::InternalSolverError(
                     InternalSolverError::FailedToFindLeavingRow,
@@ -191,8 +190,9 @@ impl Solver {
                     should_remove = *count == 0;
                 }
                 if should_remove {
-                    self.var_for_symbol.remove(&self.var_data[&term.variable].1);
-                    self.var_data.remove(&term.variable);
+                    self.var_for_symbol
+                        .swap_remove(&self.var_data[&term.variable].1);
+                    self.var_data.swap_remove(&term.variable);
                 }
             }
         }
@@ -238,7 +238,7 @@ impl Solver {
 
     /// Remove an edit variable from the solver.
     pub fn remove_edit_variable(&mut self, v: Variable) -> Result<(), RemoveEditVariableError> {
-        if let Some(constraint) = self.edits.remove(&v).map(|e| e.constraint) {
+        if let Some(constraint) = self.edits.swap_remove(&v).map(|e| e.constraint) {
             self.remove_constraint(&constraint).map_err(|e| match e {
                 RemoveConstraintError::UnknownConstraint => {
                     RemoveEditVariableError::InternalSolverError(
@@ -540,7 +540,7 @@ impl Solver {
 
         // If the artificial variable is basic, pivot the row so that
         // it becomes basic. If the row is constant, exit early.
-        if let Some(mut row) = self.rows.remove(&art) {
+        if let Some(mut row) = self.rows.swap_remove(&art) {
             if row.cells.is_empty() {
                 return Ok(success);
             }
@@ -627,7 +627,7 @@ impl Solver {
         while let Some(leaving) = self.infeasible_rows.pop() {
             let row = if let Entry::Occupied(entry) = self.rows.entry(leaving) {
                 if entry.get().constant < 0.0 {
-                    Some(entry.remove())
+                    Some(entry.swap_remove())
                 } else {
                     None
                 }
@@ -727,7 +727,7 @@ impl Solver {
                 }
             }
         }
-        found.map(|s| (s, self.rows.remove(&s).unwrap()))
+        found.map(|s| (s, self.rows.swap_remove(&s).unwrap()))
     }
 
     /// Compute the leaving row for a marker variable.
@@ -779,7 +779,7 @@ impl Solver {
                 let v = self.var_for_symbol[&s];
                 self.var_changed(v);
             }
-            self.rows.remove(&s).map(|r| (s, r))
+            self.rows.swap_remove(&s).map(|r| (s, r))
         })
     }
 

@@ -247,6 +247,10 @@ mod strength;
 mod term;
 mod variable;
 
+// Insertion-ordered so that pivot selection does not depend on the hash seed.
+type IndexMap<K, V> = indexmap::IndexMap<K, V, hashbrown::DefaultHashBuilder>;
+type IndexSet<K> = indexmap::IndexSet<K, hashbrown::DefaultHashBuilder>;
+
 pub use self::constraint::{Constraint, PartialConstraint};
 pub use self::error::{
     AddConstraintError, AddEditVariableError, RemoveConstraintError, RemoveEditVariableError,

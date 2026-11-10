@@ -25,7 +25,7 @@ rust-version = "1.85"
 default = ["std"]
 
 ## Enables usage of standard library.
-std = ["thiserror/std", "portable-atomic?/std"]
+std = ["thiserror/std", "portable-atomic?/std", "indexmap/std"]
 
 ## Enables fallback implementations of atomic types on targets without native support.
 ## Requires adding `portable-atomic` crate as a dependency and setting proper `portable-atomic` feature flags by the
@@ -39,6 +39,7 @@ document-features = ["dep:document-features"]
 
 [dependencies]
 hashbrown = "0.17"
+indexmap = { version = "2.14", default-features = false }
 portable-atomic = { version = "1.13",  default-features = false, features = ["require-cas"], optional = true }
 portable-atomic-util = { version = "0.2.7", features = ["alloc"], optional = true }
 thiserror = { version = "2.0", default-features = false }

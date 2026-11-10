@@ -1,9 +1,10 @@
-use hashbrown::hash_map::Entry;
-use hashbrown::HashMap;
+use indexmap::map::Entry;
+
+use crate::IndexMap;
 
 #[derive(Debug, Clone)]
 pub struct Row {
-    pub cells: HashMap<Symbol, f64>,
+    pub cells: IndexMap<Symbol, f64>,
     pub constant: f64,
 }
 
@@ -44,7 +45,7 @@ pub fn near_zero(value: f64) -> bool {
 impl Row {
     pub fn new(constant: f64) -> Row {
         Row {
-            cells: HashMap::new(),
+            cells: IndexMap::default(),
             constant,
         }
     }
@@ -64,7 +65,7 @@ impl Row {
             Entry::Occupied(mut entry) => {
                 *entry.get_mut() += coefficient;
                 if near_zero(*entry.get_mut()) {
-                    entry.remove();
+                    entry.swap_remove();
                 }
             }
         }
@@ -80,7 +81,7 @@ impl Row {
     }
 
     pub fn remove(&mut self, s: Symbol) {
-        self.cells.remove(&s);
+        self.cells.swap_remove(&s);
     }
 
     pub fn reverse_sign(&mut self) {
@@ -93,7 +94,7 @@ impl Row {
     pub fn solve_for_symbol(&mut self, s: Symbol) {
         let coeff = -1.0
             / match self.cells.entry(s) {
-                Entry::Occupied(entry) => entry.remove(),
+                Entry::Occupied(entry) => entry.swap_remove(),
                 Entry::Vacant(_) => unreachable!(),
             };
         self.constant *= coeff;
@@ -112,7 +113,7 @@ impl Row {
     }
 
     pub fn substitute(&mut self, s: Symbol, row: &Row) -> bool {
-        if let Some(coeff) = self.cells.remove(&s) {
+        if let Some(coeff) = self.cells.swap_remove(&s) {
             self.insert_row(row, coeff)
         } else {
             false
