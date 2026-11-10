@@ -3,8 +3,8 @@ extern crate alloc;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
+use ezel_cassowary::Variable;
 use hashbrown::HashMap;
-use kasuari::Variable;
 
 #[derive(Clone, Default)]
 struct Values(Rc<RefCell<HashMap<Variable, f64>>>);

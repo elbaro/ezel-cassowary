@@ -1,4 +1,4 @@
-use kasuari::Solver;
+use ezel_cassowary::Solver;
 
 #[test]
 fn solver_is_send_sync() {

@@ -31,8 +31,8 @@
 //! First we need to include the relevant parts of `cassowary`:
 //!
 //! ```
-//! use kasuari::WeightedRelation::*;
-//! use kasuari::{Solver, Variable};
+//! use ezel_cassowary::WeightedRelation::*;
+//! use ezel_cassowary::{Solver, Variable};
 //! ```
 //!
 //! And we'll construct some conveniences for pretty printing (which should hopefully be
@@ -91,7 +91,7 @@
 //!     box1.right - box1.left |EQ(WEAK)| 50.0,
 //!     box2.right - box2.left |EQ(WEAK)| 100.0
 //! ])?;
-//! # Ok::<(), kasuari::InternalSolverError>(())
+//! # Ok::<(), ezel_cassowary::InternalSolverError>(())
 //! ```
 //!
 //! The window width is currently free to take any positive value. Let's constrain it to a
@@ -164,8 +164,8 @@
 //! example we are going to constrain the boxes to try to maintain a ratio between their widths.
 //!
 //! ```
-//! # use kasuari::{ Solver, Variable, Strength };
-//! # use kasuari::WeightedRelation::*;
+//! # use ezel_cassowary::{ Solver, Variable, Strength };
+//! # use ezel_cassowary::WeightedRelation::*;
 //! #
 //! # use hashbrown::HashMap;
 //! # let mut names = HashMap::new();

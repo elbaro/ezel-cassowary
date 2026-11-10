@@ -1,5 +1,5 @@
-use kasuari::WeightedRelation::*;
-use kasuari::{Solver, Strength, Variable};
+use ezel_cassowary::WeightedRelation::*;
+use ezel_cassowary::{Solver, Strength, Variable};
 
 mod common;
 use common::new_values;
